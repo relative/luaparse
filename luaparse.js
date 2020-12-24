@@ -1431,6 +1431,11 @@
 
   // Is the identifier name available in this scope.
   function scopeHasName(name) {
+    if ('topScope' in scopes[scopeDepth]) {
+      if (-1 !== indexOf(scopes[scopeDepth].topScope, name)) {
+        return false
+      }
+    }
     return (-1 !== indexOf(scopes[scopeDepth], name));
   }
 
@@ -1672,6 +1677,7 @@
     var flowContext = makeFlowContext();
     flowContext.allowVararg = true;
     flowContext.pushScope();
+    flowContext.isChunk = true;
     var body = parseBlock(flowContext);
     flowContext.popScope();
     if (options.scope) destroyScope();
@@ -2018,6 +2024,14 @@
       if (options.scope) {
         for (var i = 0, l = variables.length; i < l; ++i) {
           scopeIdentifier(variables[i]);
+          if (flowContext.isChunk) {
+            variables[i].topScope = true
+            scopes[scopeDepth]['topScope'] = scopes[scopeDepth]['topScope'] || []
+
+            if (-1 === indexOf(scopes[scopeDepth]['topScope'], name)) {
+              scopes[scopeDepth]['topScope'].push(name.name)
+            }
+          }
         }
       }
 
